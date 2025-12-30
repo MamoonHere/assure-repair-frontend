@@ -1,12 +1,42 @@
-import { Layout, Card, Typography } from "antd";
+import { Layout } from "antd";
 import Navbar from "../commons/Navbar";
 import { useTheme } from "../hooks/useTheme";
+import { useEffect, useRef } from "react";
+import { io } from "socket.io-client";
+import { K } from "../constants/constants";
 
 const { Content } = Layout;
-const { Title, Paragraph } = Typography;
 
 const Home = () => {
-  const { colors, borderRadius, shadows, spacing } = useTheme();
+  const { colors, spacing } = useTheme();
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    const socketURL = K.NetworkCall.baseURL
+    const socket = io(socketURL, {
+      withCredentials: true
+    });
+    socketRef.current = socket;
+    socket.on('connect', () => {
+      console.log("✅ Socket.IO connection established successfully");
+      console.log("Socket ID:", socket.id);
+    });
+    socket.onAny((eventName, ...args) => {
+      console.log(`📨 Socket.IO event received: "${eventName}"`, args);
+    });
+    socket.on('connect_error', (error) => {
+      console.error("❌ Socket.IO connection error:", error);
+    });
+    socket.on('disconnect', (reason) => {
+      console.log("🔌 Socket.IO disconnected:", reason);
+    });
+    return () => {
+      if (socketRef.current && socketRef.current.connected) {
+        console.log("Cleaning up Socket.IO connection...");
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
 
   return (
     <Layout style={{ minHeight: "100vh", background: colors.bgContainer }}>
@@ -20,24 +50,6 @@ const Home = () => {
           background: "linear-gradient(135deg, #e0e7ff, #f0f2f5)",
         }}
       >
-        <Card
-          style={{
-            width: 600,
-            borderRadius: borderRadius.card,
-            boxShadow: shadows.card,
-            textAlign: "center",
-            padding: `${spacing.paddingLG}px`,
-            backgroundColor: colors.bgContainer,
-          }}
-        >
-          <Title level={2} style={{ color: colors.text }}>
-            Welcome to Live Map
-          </Title>
-          <Paragraph style={{ fontSize: 16, color: colors.textSecondary }}>
-            This is the home page. The <strong>Live Map</strong> feature will be
-            implemented here.
-          </Paragraph>
-        </Card>
       </Content>
     </Layout>
   );

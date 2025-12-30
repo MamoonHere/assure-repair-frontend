@@ -9,20 +9,28 @@ export const K = {
   },
   EndPoints: {
     Auth: {
-      LOGIN: '/auth/login',
-      REFRESH: '/auth/refresh',
-      LOGOUT: '/auth/logout',
-      LOGOUT_ALL: '/auth/logout-all',
+      LOGIN: "/auth/login",
+      REFRESH: "/auth/refresh",
+      LOGOUT: "/auth/logout",
+      LOGOUT_ALL: "/auth/logout-all",
     },
     User: {
       CRUD: "/users",
       RESEND_PASSWORD_EMAIL: "/users/:id/resend-password-email",
-      SET_PASSWORD: "/users/set-password"
-    }
+      SET_PASSWORD: "/users/set-password",
+    },
+    Bouncie: {
+      GET_ALL_VEHICLES: "/vehicles",
+    },
   },
   TokenRefresh: {
-    CHECK_INTERVAL_MS: parseInt(import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MS || '300000', 10),
-    EXPIRY_THRESHOLD_SECONDS: parseInt(import.meta.env.VITE_TOKEN_EXPIRY_THRESHOLD_SEC || '60', 10),
+    CHECK_INTERVAL_MS: parseInt(
+      import.meta.env.VITE_TOKEN_REFRESH_INTERVAL_MS || "300000",
+      10
+    ),
+    EXPIRY_THRESHOLD_SECONDS: parseInt(
+      import.meta.env.VITE_TOKEN_EXPIRY_THRESHOLD_SEC || "60",
+      10
+    ),
   },
 };
-
