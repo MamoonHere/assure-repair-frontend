@@ -1,0 +1,11 @@
+.navbar-menu .ant-menu-item {
+  color: #fff !important;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.navbar-menu .ant-menu-item:hover,
+.navbar-menu .ant-menu-item-selected {
+  border-bottom: 4px solid #fff;
+  color: #fff !important;
+}
