@@ -1,6 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export const K = {
+  GoogleMaps: {
+    apiKey: GOOGLE_MAPS_API_KEY,
+  },
   NetworkCall: {
     baseURL: API_BASE_URL,
     timeout: 30000,
