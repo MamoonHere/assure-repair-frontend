@@ -85,7 +85,7 @@ const UserManagement = () => {
   const handleDelete = async (record) => {
     try {
       const response = await userApi.deleteUser(record.id);
-      message.success(response?.message ||"User deleted successfully");
+      message.success(response?.message || "User deleted successfully");
       fetchUsers(tableState.pagination.current, tableState.pagination.pageSize);
     } catch (err) {
       console.error(err);
@@ -96,7 +96,9 @@ const UserManagement = () => {
   const handleResendEmail = async (record) => {
     try {
       const response = await userApi.resendEmail(record.id);
-      message.success(response?.message || "Password reset email sent successfully");
+      message.success(
+        response?.message || "Password reset email sent successfully"
+      );
     } catch (err) {
       console.error(err);
       message.error(err?.message || "Failed to send email");
@@ -249,6 +251,9 @@ const UserManagement = () => {
               pageSizeOptions: ["10", "20", "50", "100"],
             }}
             onChange={handleTableChange}
+            scroll={{
+              x: "max-content"
+            }}
           />
         </Card>
       </Content>
