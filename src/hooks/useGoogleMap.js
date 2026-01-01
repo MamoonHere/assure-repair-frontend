@@ -11,13 +11,19 @@ export const useGoogleMap = (
 
   const loadGoogleMapsScript = () => {
     return new Promise((resolve, reject) => {
+      const callbackName = `initGoogleMaps_${Date.now()}`;
+      window[callbackName] = () => {
+        delete window[callbackName];
+        resolve();
+      };
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${K.GoogleMaps.apiKey}&libraries=geometry,marker`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${K.GoogleMaps.apiKey}&libraries=geometry,marker&loading=async&callback=${callbackName}`;
       script.async = true;
       script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () =>
+      script.onerror = () => {
+        delete window[callbackName];
         reject(new Error("Failed to load Google Maps script"));
+      };
       document.head.appendChild(script);
     });
   };
