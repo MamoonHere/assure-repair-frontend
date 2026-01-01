@@ -1,5 +1,5 @@
 import { Layout } from "antd";
-import Navbar from "../commons/Navbar";
+import Navbar from "../components/Navbar";
 import { useTheme } from "../hooks/useTheme";
 
 const { Content } = Layout;

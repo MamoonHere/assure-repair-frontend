@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Layout, Menu, Dropdown, Avatar, Space, Typography } from "antd";
 import { UserOutlined, LogoutOutlined, DownOutlined } from "@ant-design/icons";
 import { useTheme } from "../hooks/useTheme";
-import LogOut from "../components/LogOut";
+import LogOut from "./LogOut";
 import { useAuth } from "../contexts/AuthContext";
 import "../css/navbar.css";
 
