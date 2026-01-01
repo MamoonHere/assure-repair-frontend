@@ -31,87 +31,77 @@ const Login = () => {
   };
 
   return (
-    <div
+    <Card
       style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        background: gradients.primaryVertical,
+        width: 400,
+        borderRadius: borderRadius.card,
+        boxShadow: shadows.card,
+        padding: `${spacing.paddingLG}px ${spacing.padding}px`,
+        backgroundColor: colors.bgContainer,
+        textAlign: "center",
       }}
     >
-      <Card
-        style={{
-          width: 400,
-          borderRadius: borderRadius.card,
-          boxShadow: shadows.card,
-          padding: `${spacing.paddingLG}px ${spacing.padding}px`,
-          backgroundColor: colors.bgContainer,
-          textAlign: "center",
-        }}
+      <img
+        src="https://assurerepair.com/wp-content/uploads/2025/09/Untitled-design-14-scaled-e1757424242558.png"
+        alt="Company Logo"
+        style={{ width: 150, marginBottom: 24 }}
+      />
+
+      <Form
+        name="login"
+        onFinish={onFinish}
+        layout="vertical"
+        autoComplete="off"
       >
-        <img
-          src="https://assurerepair.com/wp-content/uploads/2025/09/Untitled-design-14-scaled-e1757424242558.png"
-          alt="Company Logo"
-          style={{ width: 150, marginBottom: 24 }}
-        />
-
-        <Form
-          name="login"
-          onFinish={onFinish}
-          layout="vertical"
-          autoComplete="off"
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Please input your email!" },
+            { type: "email", message: "Please enter a valid email!" },
+          ]}
+          style={{ textAlign: "left" }}
         >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: "Please enter a valid email!" },
-            ]}
-            style={{ textAlign: "left" }}
-          >
-            <Input
-              placeholder="Enter your email"
-              style={{
-                borderRadius: borderRadius.base,
-              }}
-            />
-          </Form.Item>
+          <Input
+            placeholder="Enter your email"
+            style={{
+              borderRadius: borderRadius.base,
+            }}
+          />
+        </Form.Item>
 
-          <Form.Item
-            label="Password"
-            name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
-            style={{ textAlign: "left" }}
-          >
-            <Input.Password
-              placeholder="Enter your password"
-              style={{
-                borderRadius: borderRadius.base,
-              }}
-            />
-          </Form.Item>
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: "Please input your password!" }]}
+          style={{ textAlign: "left" }}
+        >
+          <Input.Password
+            placeholder="Enter your password"
+            style={{
+              borderRadius: borderRadius.base,
+            }}
+          />
+        </Form.Item>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={loading}
-              style={{
-                borderRadius: borderRadius.base,
-                background: gradients.primary,
-                border: "none",
-                marginTop: spacing.marginLG,
-              }}
-            >
-              Login
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-    </div>
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            loading={loading}
+            style={{
+              borderRadius: borderRadius.base,
+              background: gradients.primary,
+              border: "none",
+              marginTop: spacing.marginLG,
+            }}
+          >
+            Login
+          </Button>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 };
 

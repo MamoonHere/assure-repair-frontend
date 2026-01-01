@@ -3,10 +3,17 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ThemeProvider from "./contexts/ThemeProvider";
 import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";
-import Home from "./pages/Home";
+import MapComponent from "./pages/Map";
 import UserManagement from "./pages/UserManagement";
 import ProtectedRoute from "./commons/ProtectedRoute";
 import LoadingFallback from "./commons/LoadingFallback";
+import ProtectedLayout from "./layouts/ProtectedLayout";
+import PublicLayout from "./layouts/PublicLayout";
+
+const MapPage = ProtectedLayout(MapComponent);
+const UserPage = ProtectedLayout(UserManagement);
+const LogInPage = PublicLayout(Login);
+const SetPasswordPage = PublicLayout(SetPassword);
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,17 +24,19 @@ const AppRoutes = () => {
     <Routes>
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        element={isAuthenticated ? <Navigate to="/" replace /> : <LogInPage />}
       />
       <Route
         path="/set-password"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <SetPassword />}
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : <SetPasswordPage />
+        }
       />
       <Route
         path="/"
         element={
           <ProtectedRoute>
-            <Home />
+            <MapPage />
           </ProtectedRoute>
         }
       />
@@ -35,7 +44,7 @@ const AppRoutes = () => {
         path="/user-management"
         element={
           <ProtectedRoute requiredPermission="USERS.MANAGE">
-            <UserManagement />
+            <UserPage />
           </ProtectedRoute>
         }
       />

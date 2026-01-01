@@ -1,5 +1,4 @@
 import {
-  Layout,
   Card,
   Typography,
   Table,
@@ -11,13 +10,11 @@ import {
   Tag,
 } from "antd";
 import { EditOutlined, DeleteOutlined, MailOutlined } from "@ant-design/icons";
-import Navbar from "../commons/Navbar";
 import { useTheme } from "../hooks/useTheme";
 import { userApi } from "../services/requests/userApi";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import UserForm from "../components/UserForm";
 
-const { Content } = Layout;
 const { Title } = Typography;
 
 const UserManagement = () => {
@@ -210,60 +207,52 @@ const UserManagement = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh", background: colors.bgContainer }}>
-      <Navbar />
-      <Content
+    <React.Fragment>
+      <Card
         style={{
-          padding: `${spacing.paddingLG}px`,
-          background: colors.bgContainer,
+          borderRadius: borderRadius.card,
+          boxShadow: shadows.card,
+          backgroundColor: colors.bgContainer,
         }}
       >
-        <Card
-          style={{
-            borderRadius: borderRadius.card,
-            boxShadow: shadows.card,
-            backgroundColor: colors.bgContainer,
-          }}
+        <Flex
+          justify="space-between"
+          align="center"
+          style={{ marginBottom: `${spacing.marginLG}px` }}
         >
-          <Flex
-            justify="space-between"
-            align="center"
-            style={{ marginBottom: `${spacing.marginLG}px` }}
-          >
-            <Title level={2} style={{ margin: 0 }}>
-              User Management
-            </Title>
-            <Button type="primary" size="middle" onClick={handleCreate}>
-              Create User
-            </Button>
-          </Flex>
-          <Table
-            columns={columns}
-            dataSource={tableState.users}
-            rowKey="id"
-            loading={tableState.loading}
-            pagination={{
-              current: tableState.pagination.current,
-              pageSize: tableState.pagination.pageSize,
-              total: tableState.pagination.total,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} users`,
-              pageSizeOptions: ["10", "20", "50", "100"],
-            }}
-            onChange={handleTableChange}
-            scroll={{
-              x: "max-content"
-            }}
-          />
-        </Card>
-      </Content>
+          <Title level={2} style={{ margin: 0 }}>
+            User Management
+          </Title>
+          <Button type="primary" size="middle" onClick={handleCreate}>
+            Create User
+          </Button>
+        </Flex>
+        <Table
+          columns={columns}
+          dataSource={tableState.users}
+          rowKey="id"
+          loading={tableState.loading}
+          pagination={{
+            current: tableState.pagination.current,
+            pageSize: tableState.pagination.pageSize,
+            total: tableState.pagination.total,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} users`,
+            pageSizeOptions: ["10", "20", "50", "100"],
+          }}
+          onChange={handleTableChange}
+          scroll={{
+            x: "max-content",
+          }}
+        />
+      </Card>
       <UserForm
         open={modalState.isOpen}
         onCancel={handleModalCancel}
         onSuccess={handleFormSuccess}
         userData={modalState.selectedUser}
       />
-    </Layout>
+    </React.Fragment>
   );
 };
 
