@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { K } from "../constants/constants";
-import { doesScriptExist } from "../utils/mapUtility";
+import { doesScriptExist, doesMapExist } from "../utils/mapUtility";
 
 export const useGoogleMap = (
   defaultCenter = { lat: 32.7767, lng: -96.797 },
@@ -40,6 +40,8 @@ export const useGoogleMap = (
       try {
         if (!doesScriptExist()) {
           await loadGoogleMapsScript();
+        }
+        if (doesMapExist() && !mapRef.current) {
           initializeGoogleMap();
         }
       } catch (error) {
