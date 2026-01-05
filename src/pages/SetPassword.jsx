@@ -27,10 +27,8 @@ const SetPassword = () => {
     setLoading(true);
     try {
       await userApi.setPassword(token, values.password);
-      message.success("Password set successfully! Redirecting to login...");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
+      message.success("Password set successfully! Redirecting to login");
+      navigate("/login", { replace: true });
     } catch (error) {
       message.error(
         error.message || "Failed to set password. Please try again."
