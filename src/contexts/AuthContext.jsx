@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-} from "react";
+import { createContext, useContext, useReducer, useEffect } from "react";
 import {
   tokenStorage,
   setupTokenRefresh,
@@ -17,10 +12,10 @@ import { message } from "antd";
 const initialState = { user: null, isAuthenticated: false, isLoading: true };
 
 const ACTIONS = {
-  INIT: "INIT",                      // Initialize auth state on app startup or after token refresh
-  LOGIN: "LOGIN",                    // Update state after a successful user login
-  LOGOUT: "LOGOUT",                  // Clear auth state when logging out or session expires
-  SET_LOADING: "SET_LOADING",        // Mark auth state as loading during async operations
+  INIT: "INIT", // Initialize auth state on app startup or after token refresh
+  LOGIN: "LOGIN", // Update state after a successful user login
+  LOGOUT: "LOGOUT", // Clear auth state when logging out or session expires
+  SET_LOADING: "SET_LOADING", // Mark auth state as loading during async operations
 };
 
 const statusMessages = {
@@ -72,7 +67,9 @@ export const AuthProvider = ({ children }) => {
         setupTokenRefresh();
       } catch (err) {
         console.error("Auth initialization error:", err);
-        message.warning(err?.message || "Your session has expired. Please log in again.");
+        if (err?.message !== "Refresh token not found") {
+          message.warning(err?.message);
+        }
         dispatch({ type: ACTIONS.LOGOUT });
         tokenStorage.clear();
       }
