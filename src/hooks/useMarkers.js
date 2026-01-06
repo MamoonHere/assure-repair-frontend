@@ -38,5 +38,5 @@ export const useMarkers = (mapRef, vehicles) => {
       }
     });
     setBounds(vehicles, mapRef);
-  }, [mapRef, vehicles]);
+  }, [vehicles]);
 };
