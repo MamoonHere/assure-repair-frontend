@@ -8,6 +8,7 @@ export const useGoogleMap = (
   mapId = "MAP_ID"
 ) => {
   const mapRef = useRef(null);
+  const placesApiRef = useRef(null);
 
   const loadGoogleMapsScript = () => {
     return new Promise((resolve, reject) => {
@@ -28,7 +29,7 @@ export const useGoogleMap = (
     });
   };
 
-  const initializeGoogleMap = () => {
+  const initializeGoogleMap = async () => {
     const mapContainer = document.getElementById("map-container");
     mapRef.current = new window.google.maps.Map(mapContainer, {
       center: defaultCenter,
@@ -38,6 +39,8 @@ export const useGoogleMap = (
       streetViewControl: false,
       fullscreenControl: true,
     });
+    const { Place, AutocompleteSessionToken, AutocompleteSuggestion } = (await google.maps.importLibrary('places'));
+    placesApiRef.current = { Place, AutocompleteSessionToken, AutocompleteSuggestion }
     console.log("Map mounted");
   };
 
@@ -48,7 +51,7 @@ export const useGoogleMap = (
           await loadGoogleMapsScript();
         }
         if (doesMapExist() && !mapRef.current) {
-          initializeGoogleMap();
+          await initializeGoogleMap();
         }
       } catch (error) {
         console.error("Error initializing map:", error);
@@ -56,5 +59,5 @@ export const useGoogleMap = (
     })();
   }, []);
 
-  return { mapRef };
+  return { mapRef, placesApiRef };
 };
