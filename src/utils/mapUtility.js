@@ -1,3 +1,6 @@
+import React from "react";
+import { CarFilled } from "@ant-design/icons";
+
 const createMarkerElement = (rotation = 0) => {
   const element = document.createElement("div");
   Object.assign(element.style, {
@@ -206,4 +209,107 @@ export const doesScriptExist = () => {
 
 export const doesMapExist = () => {
   return window.google && window.google.maps;
+};
+
+export const formatDuration = (seconds) => {
+  if (!seconds) return "N/A";
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+};
+
+export const formatDistance = (meters) => {
+  if (!meters) return "N/A";
+  return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${meters} m`;
+};
+
+export const parseDuration = (durationString) => {
+  return durationString ? parseInt(durationString.replace("s", ""), 10) : null;
+};
+
+export const getSessionToken = (ref, placesApiRef) => {
+  if (!ref.current) {
+    const { AutocompleteSessionToken } = placesApiRef.current;
+    ref.current = new AutocompleteSessionToken();
+  }
+  return ref.current;
+};
+
+export const getLatLngFromPlaceId = async (
+  placeId,
+  placesApiRef,
+  sessionToken
+) => {
+  const { Place } = placesApiRef.current;
+  const place = new Place({
+    id: placeId,
+    requestedLanguage: "en",
+    sessionToken: sessionToken,
+  });
+  await place.fetchFields({ fields: ["location"] });
+  return {
+    lat: place.location.lat(),
+    lng: place.location.lng(),
+  };
+};
+
+export const displayVehiclesInDropDown = (vehicles) => {
+  return vehicles.map((vehicle) => ({
+    label: React.createElement(
+      "span",
+      null,
+      React.createElement(CarFilled, {
+        style: { color: "#184281", marginRight: "5px" },
+      }),
+      vehicle.nickName
+    ),
+    value: vehicle.imei,
+    type: "driver",
+  }));
+};
+
+export const hideInfoWindowCloseButton = (infoWindow) => {
+  infoWindow.addListener("domready", () => {
+    const closeBtn = document.querySelector(".gm-ui-hover-effect");
+    if (closeBtn) closeBtn.style.display = "none";
+  });
+};
+
+export const createRouteInfoWindow = (distance, duration) => {
+  const infoWindow = new window.google.maps.InfoWindow({
+    content: `
+      <div style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 200px;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #184281;">Route Information</div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #666;">Distance:</span>
+            <span style="font-weight: 500;">${formatDistance(distance)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #666;">Drive Time:</span>
+            <span style="font-weight: 500;">${formatDuration(duration)}</span>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+  hideInfoWindowCloseButton(infoWindow);
+  return infoWindow;
+};
+
+export const createMarkerInfoWindow = (name) => {
+  const infoWindow = new window.google.maps.InfoWindow({
+    content: `<div style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div style="font-size: 16px; font-weight: 600; color: #184281;">${name}</div>
+    </div>`,
+  });
+  hideInfoWindowCloseButton(infoWindow);
+  return infoWindow;
+};
+
+export const createRouteMarkerElement = (label, backgroundColor) => {
+  const element = document.createElement("div");
+  element.style.cssText = `width: 32px; height: 32px; background-color: ${backgroundColor}; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: white; cursor: pointer;`;
+  element.textContent = label;
+  return element;
 };

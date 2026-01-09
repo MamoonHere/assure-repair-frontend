@@ -1,301 +1,137 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { AutoComplete, Input, Space, Typography, Spin } from "antd";
-import {
-  SearchOutlined,
-  EnvironmentOutlined,
-  CarFilled,
-  LoadingOutlined,
-} from "@ant-design/icons";
+import { useEffect } from "react";
+import { Space } from "antd";
+import { SearchOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { googleRestApi } from "../services/requests/googleRestApi";
 import { useTheme } from "../hooks/useTheme";
-import debounce from "lodash.debounce";
+import { useRoute } from "../hooks/useRoute";
+import { useLocationSearch } from "../hooks/useLocationSearch";
+import { parseDuration, displayVehiclesInDropDown } from "../utils/mapUtility";
+import LocationInput from "./LocationInput";
 
-const { Text } = Typography;
+const MapSider = ({ vehicles = [], placesApiRef, mapRef }) => {
+  const { spacing, shadows, colors } = useTheme();
+  const { drawRoute, clearRoute } = useRoute(mapRef);
+  const startLocation = useLocationSearch(vehicles, placesApiRef);
+  const destination = useLocationSearch(vehicles, placesApiRef);
 
-const displayVehiclesInDropDown = (vehicles) => {
-  return vehicles.map((vehicle) => {
-    return {
-      label: (
-        <span>
-          <CarFilled style={{ color: "#184281", marginRight: "5px" }} />
-          {vehicle.nickName}
-        </span>
-      ),
-      value: vehicle.imei,
-      type: "driver",
+  const fetchAndDrawRoute = async (origin, dest) => {
+    const originLat = origin.latitude;
+    const originLon = origin.longitude;
+    const destLat = dest.latitude;
+    const destLon = dest.longitude;
+
+    const body = {
+      origin: {
+        location: {
+          latLng: {
+            latitude: originLat,
+            longitude: originLon,
+          },
+        },
+      },
+      destination: {
+        location: {
+          latLng: {
+            latitude: destLat,
+            longitude: destLon,
+          },
+        },
+      },
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE",
+      computeAlternativeRoutes: false,
+      routeModifiers: {
+        avoidTolls: false,
+        avoidHighways: false,
+        avoidFerries: false,
+      },
+      languageCode: "en-US",
+      units: "METRIC",
     };
-  });
-};
 
-const autocompleteLoading = (loading) => {
-  return loading ? (
-    <Spin
-      size="small"
-      indicator={<LoadingOutlined spin />}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        padding: "10px 0",
-      }}
-    />
-  ) : (
-    "No results found"
-  );
-};
+    try {
+      const route = await googleRestApi.getRoute(body);
+      console.log("Fetched Route: ", route);
 
-const getSessionToken = (ref, placesApiRef) => {
-  if (!ref.current) {
-    const { AutocompleteSessionToken } = placesApiRef.current;
-    ref.current = new AutocompleteSessionToken();
-  }
-  return ref.current;
-};
+      if (route?.routes?.[0]?.polyline?.encodedPolyline) {
+        const routeData = route.routes[0];
+        const encodedPolyline = routeData.polyline.encodedPolyline;
+        const distance = routeData?.distanceMeters || null;
+        const duration = parseDuration(routeData?.duration);
 
-const getLatLngFromPlaceId = async (placeId, placesApiRef, sessionToken) => {
-  const { Place } = placesApiRef.current;
-  const place = new Place({
-    id: placeId,
-    requestedLanguage: "en",
-    sessionToken: sessionToken,
-  });
-  await place.fetchFields({
-    fields: ["location"],
-  });
-  return {
-    lat: place.location.lat(),
-    lng: place.location.lng(),
-  };
-};
-
-const MapSider = ({ vehicles = [], placesApiRef }) => {
-  const { colors, borderRadius, spacing, shadows } = useTheme();
-  const [startLocation, setStartLocation] = useState({
-    value: null,
-    options: [],
-    loading: false,
-    lat: null,
-    lon: null,
-  });
-  const [destination, setDestination] = useState({
-    value: null,
-    options: [],
-    loading: false,
-    lat: null,
-    lon: null,
-  });
-  const startSessionTokenRef = useRef(null);
-  const destinationSessionTokenRef = useRef(null);
-
-  const vehicleOptions = useMemo(
-    () => displayVehiclesInDropDown(vehicles),
-    [vehicles]
-  );
-
-  const fetchPlacesSuggestions = useCallback(
-    async (value, isStart, sessionRef) => {
-      const { AutocompleteSuggestion } = placesApiRef.current;
-      const request = {
-        input: value,
-        language: "en-US",
-        region: "us",
-        locationRestriction: {
-          south: 24.396308,
-          west: -125.0,
-          north: 49.384358,
-          east: -66.93457,
-        },
-      };
-      request.sessionToken = getSessionToken(sessionRef, placesApiRef);
-      const { suggestions } =
-        await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
-      const results = [];
-      for (let suggestion of suggestions) {
-        const placePrediction = suggestion.placePrediction;
-        results.push({
-          label: placePrediction.text.toString(),
-          value: placePrediction.placeId,
-          type: "location",
-        });
+        await drawRoute(
+          encodedPolyline,
+          originLat,
+          originLon,
+          destLat,
+          destLon,
+          distance,
+          duration,
+          origin.value,
+          dest.value
+        );
       }
-      if (isStart) {
-        setStartLocation((prev) => ({
-          ...prev,
-          options: [...results, ...vehicleOptions],
-          loading: false,
-        }));
-      } else {
-        setDestination((prev) => ({
-          ...prev,
-          options: results,
-          loading: false,
-        }));
-      }
-    },
-    [vehicles]
-  );
-
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (searchText, isStart, sessionRef) => {
-        if (!searchText?.trim()) {
-          if (isStart) {
-            setStartLocation((prev) => ({
-              ...prev,
-              options: vehicleOptions,
-              loading: false,
-            }));
-          } else {
-            setDestination((prev) => ({
-              ...prev,
-              options: [],
-              loading: false,
-            }));
-          }
-          return;
-        }
-        try {
-          await fetchPlacesSuggestions(searchText, isStart, sessionRef);
-        } catch (error) {
-          console.error("Search error:", error);
-        }
-      }, 3000),
-    [fetchPlacesSuggestions]
-  );
-
-  const handleSearchForStartLocation = (searchText) => {
-    setStartLocation((prev) => ({
-      ...prev,
-      loading: true,
-      options: [],
-    }));
-    debouncedSearch(searchText, true, startSessionTokenRef);
+    } catch (error) {
+      console.error("Error fetching route:", error);
+    }
   };
 
-  const handleSearchForDestination = (searchText) => {
-    setDestination((prev) => ({ ...prev, loading: true, options: [] }));
-    debouncedSearch(searchText, false, destinationSessionTokenRef);
-  };
-
-  const handleSelectForStartLocation = async (id, option) => {
-    let latitude,
-      longitude = null;
-    if (option.type === "driver") {
-      const vehicle = vehicles.filter((item) => item.imei == id)[0];
-      latitude = vehicle.stats.location.lat;
-      longitude = vehicle.stats.location.lon;
+  const handleStartChange = (value) => {
+    if (!value) {
+      clearRoute();
+      startLocation.setLocation((prev) => ({
+        ...prev,
+        value: null,
+        lat: null,
+        lon: null,
+      }));
     } else {
-      const response = await getLatLngFromPlaceId(
-        id,
-        placesApiRef,
-        startSessionTokenRef.current
-      );
-      latitude = response.lat;
-      longitude = response.lng;
+      clearRoute();
+      startLocation.setLocation((prev) => ({ ...prev, value }));
     }
-    setStartLocation((prev) => ({
-      ...prev,
-      value:
-        typeof option.label === "string"
-          ? option.label
-          : option.label.props.children[1],
-      lat: latitude,
-      lon: longitude,
-    }));
-    if (destination.value) {
-      const body = {
-        origin: {
-          location: {
-            latLng: {
-              latitude: latitude,
-              longitude: longitude,
-            },
-          },
-        },
-        destination: {
-          location: {
-            latLng: {
-              latitude: destination.lat,
-              longitude: destination.lon,
-            },
-          },
-        },
-        travelMode: "DRIVE",
-        routingPreference: "TRAFFIC_AWARE",
-        computeAlternativeRoutes: false,
-        routeModifiers: {
-          avoidTolls: false,
-          avoidHighways: false,
-          avoidFerries: false,
-        },
-        languageCode: "en-US",
-        units: "METRIC",
-      };
-      const route = await googleRestApi.getRoute(body);
-      console.log("Fetched Route: ", route);
-    }
-    startSessionTokenRef.current = null;
   };
 
-  const handleSelectForDestination = async (id, option) => {
-    let latitude,
-      longitude = null;
-    const response = await getLatLngFromPlaceId(
-      id,
-      placesApiRef,
-      destinationSessionTokenRef.current
-    );
-    latitude = response.lat;
-    longitude = response.lng;
-    setDestination((prev) => ({
-      ...prev,
-      value: option.label,
-      lat: latitude,
-      lon: longitude,
-    }));
-    if (startLocation.value) {
-      const body = {
-        origin: {
-          location: {
-            latLng: {
-              latitude: startLocation.lat,
-              longitude: startLocation.lon,
-            },
-          },
-        },
-        destination: {
-          location: {
-            latLng: {
-              latitude: latitude,
-              longitude: longitude,
-            },
-          },
-        },
-        travelMode: "DRIVE",
-        routingPreference: "TRAFFIC_AWARE",
-        computeAlternativeRoutes: false,
-        routeModifiers: {
-          avoidTolls: false,
-          avoidHighways: false,
-          avoidFerries: false,
-        },
-        languageCode: "en-US",
-        units: "METRIC",
-      };
-      const route = await googleRestApi.getRoute(body);
-      console.log("Fetched Route: ", route);
+  const handleDestinationChange = (value) => {
+    if (!value) {
+      clearRoute();
+      destination.setLocation((prev) => ({
+        ...prev,
+        value: null,
+        lat: null,
+        lon: null,
+      }));
+    } else {
+      clearRoute();
+      destination.setLocation((prev) => ({ ...prev, value }));
     }
-    destinationSessionTokenRef.current = null;
+  };
+
+  const handleStartSelect = async (id, option) => {
+    clearRoute();
+    const locationData = await startLocation.handleSelect(id, option, vehicles);
+    if (destination.location.value && locationData) {
+      await fetchAndDrawRoute(locationData, destination.location);
+    }
+  };
+
+  const handleDestinationSelect = async (id, option) => {
+    clearRoute();
+    const locationData = await destination.handleSelect(id, option, vehicles);
+    if (startLocation.location.value && locationData) {
+      await fetchAndDrawRoute(startLocation.location, locationData);
+    }
   };
 
   useEffect(() => {
     if (vehicles.length) {
-      setStartLocation((prev) => ({
+      const vehicleOptions = displayVehiclesInDropDown(vehicles);
+      startLocation.setLocation((prev) => ({
         ...prev,
         options: vehicleOptions,
       }));
     }
     return () => {
-      debouncedSearch.cancel();
+      clearRoute();
     };
   }, [vehicles]);
 
@@ -316,71 +152,31 @@ const MapSider = ({ vehicles = [], placesApiRef }) => {
         size="large"
         style={{ width: "100%", marginTop: spacing.marginSM }}
       >
-        <div>
-          <Text
-            strong
-            style={{ display: "block", marginBottom: spacing.marginSM }}
-          >
-            Start Location:
-          </Text>
-          <AutoComplete
-            value={startLocation.value}
-            options={startLocation.options}
-            disabled={!vehicles.length}
-            style={{ width: "100%" }}
-            placeholder="Enter location"
-            notFoundContent={autocompleteLoading(startLocation.loading)}
-            showSearch={{
-              onSearch: handleSearchForStartLocation,
-              filterOption: false,
-            }}
-            onChange={(value) =>
-              setStartLocation((prev) => ({ ...prev, value }))
-            }
-            onSelect={handleSelectForStartLocation}
-          >
-            <Input
-              prefix={<SearchOutlined style={{ color: colors.textTertiary }} />}
-              style={{
-                borderRadius: borderRadius.base,
-                boxShadow: "0 0 6px rgba(24, 66, 129, 0.35)",
-              }}
-            />
-          </AutoComplete>
-        </div>
+        <LocationInput
+          label="Start Location"
+          value={startLocation.location.value}
+          options={startLocation.location.options}
+          loading={startLocation.location.loading}
+          disabled={!vehicles.length}
+          placeholder="Enter location"
+          icon={<SearchOutlined style={{ color: colors.textTertiary }} />}
+          onSearch={(value) => startLocation.handleSearch(value, true)}
+          onChange={handleStartChange}
+          onSelect={handleStartSelect}
+        />
 
-        <div>
-          <Text
-            strong
-            style={{ display: "block", marginBottom: spacing.marginSM }}
-          >
-            Target Location:
-          </Text>
-          <AutoComplete
-            value={destination.value}
-            options={destination.options}
-            disabled={!vehicles.length}
-            style={{ width: "100%" }}
-            placeholder="Enter destination"
-            notFoundContent={autocompleteLoading(destination.loading)}
-            showSearch={{
-              onSearch: handleSearchForDestination,
-              filterOption: false,
-            }}
-            onChange={(value) => setDestination((prev) => ({ ...prev, value }))}
-            onSelect={handleSelectForDestination}
-          >
-            <Input
-              prefix={
-                <EnvironmentOutlined style={{ color: colors.textTertiary }} />
-              }
-              style={{
-                borderRadius: borderRadius.base,
-                boxShadow: "0 0 6px rgba(24, 66, 129, 0.35)",
-              }}
-            />
-          </AutoComplete>
-        </div>
+        <LocationInput
+          label="Target Location"
+          value={destination.location.value}
+          options={destination.location.options}
+          loading={destination.location.loading}
+          disabled={!vehicles.length}
+          placeholder="Enter destination"
+          icon={<EnvironmentOutlined style={{ color: colors.textTertiary }} />}
+          onSearch={(value) => destination.handleSearch(value, false)}
+          onChange={handleDestinationChange}
+          onSelect={handleDestinationSelect}
+        />
       </Space>
     </div>
   );

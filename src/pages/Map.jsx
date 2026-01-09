@@ -15,7 +15,11 @@ const MapComponent = () => {
 
   return (
     <div style={{ display: "flex", height: "calc(100vh - 70px)" }}>
-      <MapSider  vehicles={vehicles} placesApiRef={placesApiRef}/>
+      <MapSider
+        vehicles={vehicles}
+        placesApiRef={placesApiRef}
+        mapRef={mapRef}
+      />
       <div
         id="map-container"
         style={{
