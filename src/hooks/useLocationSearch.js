@@ -5,6 +5,7 @@ import {
   getLatLngFromPlaceId,
   displayVehiclesInDropDown,
 } from "../utils/mapUtility";
+import { message } from "antd";
 
 export const useLocationSearch = (vehicles, placesApiRef) => {
   const sessionTokenRef = useRef(null);
@@ -86,6 +87,11 @@ export const useLocationSearch = (vehicles, placesApiRef) => {
   );
 
   const handleSelect = async (id, option, vehicles) => {
+    setLocation((prev) => ({
+      ...prev,
+      value: locationValue,
+    }));
+
     const locationValue =
       typeof option.label === "string"
         ? option.label
@@ -97,18 +103,24 @@ export const useLocationSearch = (vehicles, placesApiRef) => {
       latitude = vehicle.stats.location.lat;
       longitude = vehicle.stats.location.lon;
     } else {
-      const response = await getLatLngFromPlaceId(
-        id,
-        placesApiRef,
-        sessionTokenRef.current
-      );
-      latitude = response.lat;
-      longitude = response.lng;
+      try {
+        const response = await getLatLngFromPlaceId(
+          id,
+          placesApiRef,
+          sessionTokenRef.current
+        );
+        latitude = response.lat;
+        longitude = response.lng;
+      } catch (error) {
+        const errorMessage =
+          "Could not fetch exact location details for the place selected";
+        console.error(errorMessage);
+        message.error(errorMessage);
+      }
     }
 
     setLocation((prev) => ({
       ...prev,
-      value: locationValue,
       latitude: latitude,
       longitude: longitude,
     }));
