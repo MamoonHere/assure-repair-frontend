@@ -34,7 +34,7 @@ export const useSocketVehicles = (setVehicles, markersRef, tooltipsRef) => {
   const processEventPayload = (eventPayload) => {
     eventPayload.forEach((event) => {
       const imei = event.imei;
-      const tripInformation = event.data[0];
+      const tripInformation = event.data[event.data.length -1];
       const gps = tripInformation.gps;
       const marker = markersRef.current.get(imei);
       const tooltipData = tooltipsRef.current.get(imei);
@@ -50,6 +50,7 @@ export const useSocketVehicles = (setVehicles, markersRef, tooltipsRef) => {
 
   const handleSocketReceivingEvent = (socket) => {
     socket.onAny((_, ...eventPayload) => {
+      console.log("Event received")
       processEventPayload(eventPayload);
     });
   };
