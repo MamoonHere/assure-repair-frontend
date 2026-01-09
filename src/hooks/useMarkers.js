@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   setBounds,
   doesMapExist,
@@ -7,9 +7,14 @@ import {
 } from "../utils/mapUtility";
 
 export const useMarkers = (mapRef, vehicles, markersRef, tooltipsRef) => {
+  const hasSetInitialBounds = useRef(false);
+  const previousVehicleCount = useRef(0);
 
   useEffect(() => {
     if (!doesMapExist()) return;
+
+    let hasNewMarkers = false;
+    const currentVehicleCount = vehicles.length;
 
     vehicles.forEach((vehicle) => {
       if (!vehicle.stats?.location) return;
@@ -25,6 +30,7 @@ export const useMarkers = (mapRef, vehicles, markersRef, tooltipsRef) => {
           position
         );
       } else {
+        hasNewMarkers = true;
         handleNewMarkerCase(
           vehicle,
           markersRef,
@@ -35,6 +41,16 @@ export const useMarkers = (mapRef, vehicles, markersRef, tooltipsRef) => {
         );
       }
     });
-    setBounds(vehicles, mapRef);
+
+    if (
+      !hasSetInitialBounds.current ||
+      hasNewMarkers ||
+      currentVehicleCount !== previousVehicleCount.current
+    ) {
+      setBounds(vehicles, mapRef);
+      hasSetInitialBounds.current = true;
+    }
+
+    previousVehicleCount.current = currentVehicleCount;
   }, [vehicles]);
 };
