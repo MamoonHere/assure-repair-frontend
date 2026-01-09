@@ -8,13 +8,19 @@ import { useLocationSearch } from "../hooks/useLocationSearch";
 import { parseDuration, displayVehiclesInDropDown } from "../utils/mapUtility";
 import LocationInput from "./LocationInput";
 
-const MapSider = ({ vehicles = [], placesApiRef, mapRef }) => {
+const MapSider = ({
+  vehicles = [],
+  placesApiRef,
+  mapRef,
+  setIsRouteLoading,
+}) => {
   const { spacing, shadows, colors } = useTheme();
   const { drawRoute, clearRoute } = useRoute(mapRef);
   const startLocation = useLocationSearch(vehicles, placesApiRef);
   const destination = useLocationSearch(vehicles, placesApiRef);
 
   const fetchAndDrawRoute = async (origin, dest) => {
+    setIsRouteLoading(true);
     const originLat = origin.latitude;
     const originLon = origin.longitude;
     const destLat = dest.latitude;
@@ -73,6 +79,8 @@ const MapSider = ({ vehicles = [], placesApiRef, mapRef }) => {
       }
     } catch (error) {
       console.error("Error fetching route:", error);
+    } finally {
+      setIsRouteLoading(false);
     }
   };
 
