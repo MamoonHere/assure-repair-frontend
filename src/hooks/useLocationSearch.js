@@ -114,7 +114,7 @@ export const useLocationSearch = (vehicles, placesApiRef) => {
     }));
 
     sessionTokenRef.current = null;
-    return { latitude, longitude };
+    return { value: locationValue, latitude, longitude };
   };
 
   return {
