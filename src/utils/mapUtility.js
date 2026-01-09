@@ -309,7 +309,39 @@ export const createMarkerInfoWindow = (name) => {
 
 export const createRouteMarkerElement = (label, backgroundColor) => {
   const element = document.createElement("div");
-  element.style.cssText = `width: 32px; height: 32px; background-color: ${backgroundColor}; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: white; cursor: pointer;`;
+
+  element.style.cssText = `
+    width: 32px;
+    height: 32px;
+    background-color: ${backgroundColor};
+    border-radius: 50%;
+    border: 3px solid ${backgroundColor};
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  `;
+
+  const tip = document.createElement("div");
+  tip.style.cssText = `
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 12px solid ${backgroundColor};
+    transform: translateX(-50%);
+  `;
+
   element.textContent = label;
+  element.appendChild(tip);
+
   return element;
 };
