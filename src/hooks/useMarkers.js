@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   setBounds,
   doesMapExist,
@@ -6,9 +6,7 @@ import {
   handleExistingMarkerCase,
 } from "../utils/mapUtility";
 
-export const useMarkers = (mapRef, vehicles) => {
-  const markersRef = useRef(new Map());
-  const tooltipsRef = useRef(new Map());
+export const useMarkers = (mapRef, vehicles, markersRef, tooltipsRef) => {
 
   useEffect(() => {
     if (!doesMapExist()) return;

@@ -8,12 +8,12 @@ import MapSider from "../components/MapSider";
 
 const MapComponent = () => {
   const { mapRef, placesApiRef } = useGoogleMap();
-  const { vehicles } = useVehiclesAPI();
+  const { vehicles, setVehicles } = useVehiclesAPI();
   const markersRef = useRef(new Map());
   const tooltipsRef = useRef(new Map());
   const [isRouteLoading, setIsRouteLoading] = useState(false);
-  useMarkers(mapRef, vehicles);
-  //useSocketVehicles(setVehicles, markersRef, tooltipsRef);
+  useMarkers(mapRef, vehicles, markersRef, tooltipsRef);
+  useSocketVehicles(setVehicles, markersRef, tooltipsRef);
 
   return (
     <div

@@ -40,8 +40,8 @@ export const useSocketVehicles = (setVehicles, markersRef, tooltipsRef) => {
       const tooltipData = tooltipsRef.current.get(imei);
       if (marker) {
         marker.position = { lat: gps.lat, lng: gps.lon };
-        if (gps.heading !== undefined && tooltipData?.arrow) {
-          tooltipData.arrow.style.transform = `translateX(-50%) rotate(${gps.heading}deg)`;
+        if (gps.heading !== undefined && tooltipData?.element) {
+          tooltipData.element.style.transform = `rotate(${gps.heading}deg)`;
         }
         updateVehicleData(gps, tripInformation, imei);
       }
