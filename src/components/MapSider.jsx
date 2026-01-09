@@ -138,10 +138,13 @@ const MapSider = ({
         options: vehicleOptions,
       }));
     }
+  }, [vehicles]);
+
+  useEffect(() => {
     return () => {
       clearRoute();
     };
-  }, [vehicles]);
+  }, []);
 
   return (
     <div
