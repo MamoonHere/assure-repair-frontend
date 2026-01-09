@@ -59,7 +59,7 @@ export const useRoute = (mapRef) => {
       const polyline = new window.google.maps.Polyline({
         path: decodedPath,
         geodesic: true,
-        strokeColor: "#184281",
+        strokeColor: "#5A9AE2",
         strokeOpacity: 1.0,
         strokeWeight: 4,
         icons: [
@@ -67,7 +67,7 @@ export const useRoute = (mapRef) => {
             icon: {
               path: window.google.maps.SymbolPath.CIRCLE,
               scale: 3,
-              strokeColor: "#184281",
+              strokeColor: "#5A9AE2",
               strokeWeight: 4,
             },
             offset: "0%",
