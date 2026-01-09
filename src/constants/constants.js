@@ -26,6 +26,9 @@ export const K = {
     Bouncie: {
       GET_ALL_VEHICLES: "/vehicles",
     },
+    Google: {
+      GET_ROUTE: "https://routes.googleapis.com/directions/v2:computeRoutes",
+    }
   },
   TokenRefresh: {
     CHECK_INTERVAL_MS: parseInt(

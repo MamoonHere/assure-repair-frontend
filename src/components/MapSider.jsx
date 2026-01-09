@@ -6,6 +6,7 @@ import {
   CarFilled,
   LoadingOutlined,
 } from "@ant-design/icons";
+import { googleRestApi } from "../services/requests/googleRestApi";
 import { useTheme } from "../hooks/useTheme";
 import debounce from "lodash.debounce";
 
@@ -20,7 +21,8 @@ const displayVehiclesInDropDown = (vehicles) => {
           {vehicle.nickName}
         </span>
       ),
-      value: vehicle.nickName,
+      value: vehicle.imei,
+      type: "driver",
     };
   });
 };
@@ -49,17 +51,37 @@ const getSessionToken = (ref, placesApiRef) => {
   return ref.current;
 };
 
+const getLatLngFromPlaceId = async (placeId, placesApiRef, sessionToken) => {
+  const { Place } = placesApiRef.current;
+  const place = new Place({
+    id: placeId,
+    requestedLanguage: "en",
+    sessionToken: sessionToken,
+  });
+  await place.fetchFields({
+    fields: ["location"],
+  });
+  return {
+    lat: place.location.lat(),
+    lng: place.location.lng(),
+  };
+};
+
 const MapSider = ({ vehicles = [], placesApiRef }) => {
   const { colors, borderRadius, spacing, shadows } = useTheme();
   const [startLocation, setStartLocation] = useState({
     value: null,
     options: [],
     loading: false,
+    lat: null,
+    lon: null,
   });
   const [destination, setDestination] = useState({
     value: null,
     options: [],
     loading: false,
+    lat: null,
+    lon: null,
   });
   const startSessionTokenRef = useRef(null);
   const destinationSessionTokenRef = useRef(null);
@@ -92,6 +114,7 @@ const MapSider = ({ vehicles = [], placesApiRef }) => {
         results.push({
           label: placePrediction.text.toString(),
           value: placePrediction.placeId,
+          type: "location",
         });
       }
       if (isStart) {
@@ -153,13 +176,114 @@ const MapSider = ({ vehicles = [], placesApiRef }) => {
     debouncedSearch(searchText, false, destinationSessionTokenRef);
   };
 
-  const handleSelectForStartLocation = (_, option) => {
-    setStartLocation((prev) => ({ ...prev, value: option.label }));
+  const handleSelectForStartLocation = async (id, option) => {
+    let latitude,
+      longitude = null;
+    if (option.type === "driver") {
+      const vehicle = vehicles.filter((item) => item.imei == id)[0];
+      latitude = vehicle.stats.location.lat;
+      longitude = vehicle.stats.location.lon;
+    } else {
+      const response = await getLatLngFromPlaceId(
+        id,
+        placesApiRef,
+        startSessionTokenRef.current
+      );
+      latitude = response.lat;
+      longitude = response.lng;
+    }
+    setStartLocation((prev) => ({
+      ...prev,
+      value:
+        typeof option.label === "string"
+          ? option.label
+          : option.label.props.children[1],
+      lat: latitude,
+      lon: longitude,
+    }));
+    if (destination.value) {
+      const body = {
+        origin: {
+          location: {
+            latLng: {
+              latitude: latitude,
+              longitude: longitude,
+            },
+          },
+        },
+        destination: {
+          location: {
+            latLng: {
+              latitude: destination.lat,
+              longitude: destination.lon,
+            },
+          },
+        },
+        travelMode: "DRIVE",
+        routingPreference: "TRAFFIC_AWARE",
+        computeAlternativeRoutes: false,
+        routeModifiers: {
+          avoidTolls: false,
+          avoidHighways: false,
+          avoidFerries: false,
+        },
+        languageCode: "en-US",
+        units: "METRIC",
+      };
+      const route = await googleRestApi.getRoute(body);
+      console.log("Fetched Route: ", route);
+    }
     startSessionTokenRef.current = null;
   };
 
-  const handleSelectForDestination = (_, option) => {
-    setDestination((prev) => ({ ...prev, value: option.label }));
+  const handleSelectForDestination = async (id, option) => {
+    let latitude,
+      longitude = null;
+    const response = await getLatLngFromPlaceId(
+      id,
+      placesApiRef,
+      destinationSessionTokenRef.current
+    );
+    latitude = response.lat;
+    longitude = response.lng;
+    setDestination((prev) => ({
+      ...prev,
+      value: option.label,
+      lat: latitude,
+      lon: longitude,
+    }));
+    if (startLocation.value) {
+      const body = {
+        origin: {
+          location: {
+            latLng: {
+              latitude: startLocation.lat,
+              longitude: startLocation.lon,
+            },
+          },
+        },
+        destination: {
+          location: {
+            latLng: {
+              latitude: latitude,
+              longitude: longitude,
+            },
+          },
+        },
+        travelMode: "DRIVE",
+        routingPreference: "TRAFFIC_AWARE",
+        computeAlternativeRoutes: false,
+        routeModifiers: {
+          avoidTolls: false,
+          avoidHighways: false,
+          avoidFerries: false,
+        },
+        languageCode: "en-US",
+        units: "METRIC",
+      };
+      const route = await googleRestApi.getRoute(body);
+      console.log("Fetched Route: ", route);
+    }
     destinationSessionTokenRef.current = null;
   };
 
